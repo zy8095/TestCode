@@ -27,34 +27,39 @@ class Net(torch.nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.conv1 = torch.nn.Sequential(
-            torch.nn.Conv2d(1,16,5,1,2),
+            torch.nn.Conv2d(1,32,5,1,2),
             torch.nn.ReLU(),
-            torch.nn.MaxPool2d(2),
+            torch.nn.MaxPool2d(2), # 16 * 14 * 14
         )
+        
         self.conv2 = torch.nn.Sequential(
-            torch.nn.Conv2d(16,32,5,1,2),
+            torch.nn.Conv2d(32,64,5,1,2),
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(2),
         )
-        self.out = torch.nn.Linear(32*7*7,10)
+
+        self.hidden = torch.nn.Linear(7*7*64,1024)
+
+        self.out = torch.nn.Linear(1024,10)
 
     def forward(self, in_data):
         in_data, = self.conv1(in_data),
         in_data, = self.conv2(in_data),
         # in_data = in_data[0]
         in_data = in_data.view(in_data.size(0),-1)
-        out = self.out(in_data)
+        out = self.hidden(in_data)
+        out = self.out(out)
         return out
 
 
 net = Net().cuda()
 print (net)
 
-optimizer = torch.optim.Adam(net.parameters(), 0.001)
+optimizer = torch.optim.SGD(net.parameters(), 0.001)
 loss_function = torch.nn.CrossEntropyLoss()
 
 # Train
-num_epoches = 2000
+num_epoches = 10000
 
 for epoch in range(num_epoches):
 
